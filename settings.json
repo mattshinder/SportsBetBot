@@ -1,0 +1,38 @@
+{
+    "clientId" : "774954401064157194",
+	"serverId" : "774954355622281217",
+	"adminId" : "142811309677871104",
+	"nbaoptions" : { 
+		"ATL": "Atlanta",
+		"BOS": "Boston",
+		"CHA": "Charlotte",
+		"CHI": "Chicago",
+		"CLE": "Cleveland",
+		"DAL": "DALLAS",
+		"DEN": "Denver",
+		"DET": "Detroit",
+		"GSW": "Golden State",
+		"HOU": "Houston",
+		"IND": "Indiana",
+		"LAC": "LA Clippers",
+		"LAL": "LA Lakers",
+		"MEM": "Memphis",
+		"MIA": "Miami", 
+		"MIL": "Milwaukee",
+		"MIN": "Minnesota",
+		"NOP": "New Orleans",
+		"NYK": "New York",
+		"SAS": "San Antonio",
+		"BKN": "Brooklyn",
+		"OKC": "Okla City",
+		"ORL": "Orlando",
+		"PHI": "Philadelphia",
+		"PHX": "Phoenix",
+		"POR": "Portland",
+		"SAC": "Sacramento",
+		"TOR": "Toronto",
+		"UTA": "Utah",
+		"WAS": "Washington"
+  	}
+}
+
