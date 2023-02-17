@@ -2,7 +2,7 @@
     "clientId" : "774954401064157194",
 	"serverId" : "774954355622281217",
 	"adminId" : "142811309677871104",
-	"nbaoptions" : { 
+	"nbaOptions" : { 
 		"ATL": "Atlanta",
 		"BOS": "Boston",
 		"CHA": "Charlotte",

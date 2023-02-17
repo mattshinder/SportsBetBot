@@ -12,15 +12,15 @@ const { token } = require('./config.json');
 const {AttachmentBuilder, EmbedBuilder } = require('discord.js');
 const teamColors = require(`./colors.json`);
 
-let nbaoptions = settings.nbaoptions
+let nbaOptions = settings.nbaOptions
 
-let gamesobjs = []
+let gamesObjs = []
 
 async function start() {
     let games = await getNBAGames()
     for (let i = 0; i < games.length; i++) {
         let num = games[i].indexOf(':')
-        gamesobjs[i] = {name: JSON.stringify(games[i].substring(0, num)).replace(/"|'/g, ''), value: JSON.stringify(games[i].substring(num+2)).replace(/"|'/g, '')}
+        gamesObjs[i] = {name: JSON.stringify(games[i].substring(0, num)).replace(/"|'/g, ''), value: JSON.stringify(games[i].substring(num+2)).replace(/"|'/g, '')}
     }
     let nbaCommand = new SlashCommandBuilder()
     .setName('nbabet')
@@ -30,8 +30,8 @@ async function start() {
             .setDescription('Pick a game')
             .setRequired(true)
 
-            for (let i = 0; i < gamesobjs.length; i++){
-                option.addChoices({name: gamesobjs[i].name, value: gamesobjs[i].name})
+            for (let i = 0; i < gamesObjs.length; i++){
+                option.addChoices({name: gamesObjs[i].name, value: gamesObjs[i].name})
             }
             return option
         }
@@ -60,14 +60,14 @@ client.on('interactionCreate', async interaction => {
             case 'nbabet':
                 await interaction.deferReply();
                 let str = interaction.options.getString('game')
-                let favorite = gamesobjs.find(obj => {
+                let favorite = gamesObjs.find(obj => {
                     return obj.name === str
                   }).value.substring(0,3)
-                let away = nbaoptions[interaction.options.getString('game').substring(0,3)]
-                let home = nbaoptions[interaction.options.getString('game').substring(6)]
-                favorite = nbaoptions[favorite]
+                let away = nbaOptions[interaction.options.getString('game').substring(0,3)]
+                let home = nbaOptions[interaction.options.getString('game').substring(6)]
+                favorite = nbaOptions[favorite]
                 let res = await betPrediction(away, home, favorite)
-                let teamcode = Object.keys(nbaoptions).find(key => nbaoptions[key] == res)
+                let teamcode = Object.keys(nbaOptions).find(key => nbaOptions[key] == res)
                 const attachment = new AttachmentBuilder("../testbot/logos/" + teamcode + ".png")
                 const embed = new EmbedBuilder()
                         .setColor(teamColors[teamcode])
@@ -78,15 +78,15 @@ client.on('interactionCreate', async interaction => {
             case 'nbagames':
                 await interaction.deferReply();
                 let games = await getNBAGames()
-                var gamesobj = []
+                var gamesObj = []
                 for (let i = 0; i < games.length; i++) {
                     let num = games[i].indexOf(':')
-                    gamesobj[i] = {name: JSON.stringify(games[i].substring(0, num)).replace(/"|'/g, ''), 
+                    gamesObj[i] = {name: JSON.stringify(games[i].substring(0, num)).replace(/"|'/g, ''), 
                         value: JSON.stringify(games[i].substring(num+2)).replace(/"|'/g, '')}
                 }
                 let embedgames = new EmbedBuilder()
                         .setTitle('Games Today')
-                        .addFields(gamesobj)
+                        .addFields(gamesObj)
                 interaction.followUp({embeds: [embedgames]})
                 break;
         }
@@ -95,28 +95,27 @@ client.on('interactionCreate', async interaction => {
 
 async function betPrediction(away, home, favorite) {
     // CALL FOR FIRST WEBSITE
-    let [awaynum, homenum] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=all_games', away, home)
+    let [awayNum, homeNum] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=all_games', away, home)
     // CALL FOR AWAYTEAM
-    let [awayaway, homeaway] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=is_away', away, home)
+    let [awayAway, homeAway] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=is_away', away, home)
     // CALL FOR HOMETEAM
-    let [awayhome, homehome] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=is_home', away, home)
+    let [awayHome, homeHome] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=is_home', away, home)
     // CALL FOR FAVORITE
-    let [awayfav, homefav] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=is_fav', away, home)
+    let [awayFav, homeFav] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=is_fav', away, home)
     // CALL FOR UNDERDOG
-    let [awaydog, homedog] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=is_dog', away, home)
+    let [awayDog, homeDog] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=is_dog', away, home)
     // Calculat differece, return winner and CODE
     // Formula for AWAY: ORIG + (awayaway - awayhome) + (awayfav - awaydog) <- figure out if dog or fav then swap
-    console.log(awaynum, homenum, awayaway, homeaway, awayhome, homehome, awayfav, homefav, awaydog, homedog)
     if (away == favorite) {
-        awaynum += (awayaway - awayhome) + (awayfav - awaydog)
-        homenum += (homehome - homeaway) + (homedog - homefav)
+        awayNum += (awayAway - awayHome) + (awayFav - awayDog)
+        homeNum += (homeHome - homeAway) + (homeDog - homeFav)
     }
     // HOME IS FAV
     else {
-        awaynum += (awayaway - awayhome) + (awaydog - awayfav)
-        homenum += (homehome - homeaway) + (homefav - homedog)
+        awayNum += (awayAway - awayHome) + (awayDog - awayFav)
+        homeNum += (homeHome - homeAway) + (homeFav - homeDog)
     }
-    if (awaynum - homenum > 0) {
+    if (awayNum - homeNum > 0) {
         return away
     }
     else {
@@ -155,25 +154,25 @@ async function scrapeSite(site, away, home) {
     const browser = await puppeteer.launch()
     const page = await browser.newPage();
     await page.goto(site);
-    let [awayres, homeres] = await page.evaluate((away, home) => {
-        let awaynum = homenum = 0
+    let [awayRes, homeRes] = await page.evaluate((away, home) => {
+        let awayNum = homeNum = 0
         let teamList = document.getElementsByClassName('nowrap')
         let spreadList = [...document.getElementsByClassName('text-right green sorting_1'), 
             ...document.getElementsByClassName('text-right sorting_1')]
         let buffer = Object.keys(spreadList).length - 30
         for (let i = 4; i < Object.keys(teamList).length; i++) {
             if (teamList[i].textContent.startsWith(away)) {
-                awaynum = Number(spreadList[i-4+buffer].textContent.slice(0, -1))
+                awayNum = Number(spreadList[i-4+buffer].textContent.slice(0, -1))
             }
             if (teamList[i].textContent.startsWith(home)) {
-                homenum = Number(spreadList[i-4+buffer].textContent.slice(0, -1))
+                homeNum = Number(spreadList[i-4+buffer].textContent.slice(0, -1))
             }
         }
         let x = typeof spreadList
-        return [awaynum, homenum]
+        return [awayNum, homeNum]
     }, away, home)
     await browser.close();
-    return [awayres, homeres]
+    return [awayRes, homeRes]
 }
 
 client.on('ready', async() => {
