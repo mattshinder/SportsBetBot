@@ -67,12 +67,12 @@ client.on('interactionCreate', async interaction => {
                 let home = nbaOptions[interaction.options.getString('game').substring(6)]
                 favorite = nbaOptions[favorite]
                 let res = await betPrediction(away, home, favorite)
-                let teamcode = Object.keys(nbaOptions).find(key => nbaOptions[key] == res)
-                const attachment = new AttachmentBuilder("../testbot/logos/" + teamcode + ".png")
+                let teamCode = Object.keys(nbaOptions).find(key => nbaOptions[key] == res)
+                const attachment = new AttachmentBuilder(getAttachmentFromTeamCode(teamCode))
                 const embed = new EmbedBuilder()
-                        .setColor(teamColors[teamcode])
-                        .setTitle(JSON.stringify(away + ' v ' + home + '. Bet on ' + res))
-                        .setImage('attachment://' + teamcode + ".png");
+                        .setColor(teamColors[teamCode])
+                        .setTitle(createTitle(away, home, res))
+                        .setImage(getImageFileFromTeamCode(teamCode));
                 interaction.followUp({embeds: [embed], files: [attachment]});
                 break;
             case 'nbagames':
@@ -92,6 +92,17 @@ client.on('interactionCreate', async interaction => {
         }
 });
 
+function createTitle(away, home, res) {
+    return JSON.stringify(`${away} v ${home}. Bet on ${res}`)
+}
+
+function getImageFileFromTeamCode(teamCode) {
+    return `attachment://${teamCode}.png`
+}
+
+function getAttachmentFromTeamCode(teamCode) {
+    return `../testbot/logos/${teamCode}.png`
+}
 
 async function betPrediction(away, home, favorite) {
     // CALL FOR FIRST WEBSITE
@@ -104,8 +115,8 @@ async function betPrediction(away, home, favorite) {
     let [awayFav, homeFav] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=is_fav', away, home)
     // CALL FOR UNDERDOG
     let [awayDog, homeDog] = await scrapeSite('https://www.teamrankings.com/nba/trends/ats_trends/?sc=is_dog', away, home)
-    // Calculat differece, return winner and CODE
-    // Formula for AWAY: ORIG + (awayaway - awayhome) + (awayfav - awaydog) <- figure out if dog or fav then swap
+    // Calculate difference, return winner and CODE
+    // Formula for AWAY: ORIG + (awayAway - awayHome) + (awayFav - awayDog) <- figure out if dog or fav then swap
     if (away == favorite) {
         awayNum += (awayAway - awayHome) + (awayFav - awayDog)
         homeNum += (homeHome - homeAway) + (homeDog - homeFav)
